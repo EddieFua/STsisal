@@ -1,6 +1,3 @@
-# medNet
-# medNet
-# medNet
-# medNet
-# medNet
-# medNet
+# STsisal
+##STsisal: A Reference-Free Deconvolution Pipeline for Spatial Transcriptomics 
+![image](pipeline.pdf)
