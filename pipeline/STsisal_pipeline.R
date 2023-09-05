@@ -1,11 +1,11 @@
-source('/Users/fuyinghao/Documents/STsisal/function/clean_count.R')
-source('/Users/fuyinghao/Documents/STsisal/function/getCellNumber_st.R')
-source('/Users/fuyinghao/Documents/STsisal/function/csDeconv_st.R')
-source('/Users/fuyinghao/Documents/STsisal/function/mysisal.R')
-source('/Users/fuyinghao/Documents/STsisal/function/simplenormalize.R')
-source('/Users/fuyinghao/Documents/STsisal/function/sisal.R')
-source('/Users/fuyinghao/Documents/STsisal/function/vca.R')
-source('/Users/fuyinghao/Documents/STsisal/function/findRefinx.R')
+source('~/function/clean_count.R')
+source('~/function/getCellNumber_st.R')
+source('~/function/csDeconv_st.R')
+source('~/function/mysisal.R')
+source('~/function/simplenormalize.R')
+source('~/function/sisal.R')
+source('~/function/vca.R')
+source('~/function/findRefinx.R')
 library(deconf)
 library(TOAST)
 CornerToEstProp = function (corner)
@@ -31,6 +31,58 @@ CornerToMarker = function (distances, topN)
     split(markerList, rep(1:ncol(markerList), each = nrow(markerList)))
   return(markerList)
 }
+
+Rsumlog = function (a) 
+{
+  s <- a[1]
+  for (i in 2:length(a)) s <- Raddlog(s, a[i])
+  s
+}
+
+Raddlog = function (a, b) 
+{
+  result <- rep(0, length(a))
+  idx1 <- a > b + 200
+  result[idx1] <- a[idx1]
+  idx2 <- b > a + 200
+  result[idx2] <- b[idx2]
+  idx0 <- !(idx1 | idx2)
+  result[idx0] <- a[idx0] + log1p(exp(b[idx0] - a[idx0]))
+  result
+}
+
+MyNaiveBayes = function (selProf, knowRef) 
+{
+  nbres <- matrix(0, ncol(knowRef), ncol(selProf))
+  for (ii in 1:ncol(selProf)) {
+    initrec <- rep(0, ncol(knowRef))
+    for (jj in 1:ncol(knowRef)) {
+      initrec[jj] <- -sum((knowRef[, jj] - selProf[, ii])^2)
+    }
+    nbres[, ii] <- exp(initrec)/exp(Rsumlog(initrec))
+  }
+  return(nbres)
+}
+
+GetCorRes = function (selProf, knowRefAll) 
+{
+  isc = intersect(rownames(selProf), rownames(knowRefAll))
+  selProf = selProf[isc, ]
+  knowRef <- knowRefAll[isc, ]
+  cormat <- cor(knowRef, selProf)
+  nbmat <- MyNaiveBayes(selProf, knowRef)
+  summat <- (cormat + nbmat)/2
+  summat_org <- summat
+  assignLabel <- rep("Unassigned", ncol(selProf))
+  for (i in 1:ncol(knowRefAll)) {
+    thisidx <- which(summat == max(summat), arr.ind = TRUE)
+    assignLabel[thisidx[2]] <- rownames(summat)[thisidx[1]]
+    summat[thisidx[1], ] <- -1
+    summat[, thisidx[2]] <- -1
+  }
+  return(list(assignLabel = assignLabel, probMat = summat_org))
+}
+
 STsisal_pipeline = function(Y_raw,K = NULL, knowRef = NULL, possibleCellNumber = 3:15,n_marker = 1000,TotalIter = 5){
   Y_raw = clean_count(Y_raw)
   if (is.null(K)) {
