@@ -10,9 +10,8 @@ STsisal is mainly depends on the previous research TOAST and deconf, and deconf 
 
 Usage
 ------------
-After download TOAST and deconf, you can source STsisal pipeline directly.
+After downloading TOAST and deconf, you can source STsisal pipeline directly.
 ``` r
-source(~/pipeline/STsisal_pipeline.R)
 source(~/pipeline/STsisal_pipeline.R)
 load('~/data/P4/PDAC/Figure4A_layer_annote.RData')
 load('~/data/P4/PDAC/PDAC_A_metadata.RData')
