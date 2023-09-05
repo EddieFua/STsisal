@@ -1,6 +1,6 @@
 # STsisal
 ##STsisal: A Reference-Free Deconvolution Pipeline for Spatial Transcriptomics 
-![Pipeline](pipeline.jpg)
+![Pipeline](pipeline.png)
 
 We propose a  novel reference-free deconvolution method explicitly designed for ST data. STsisal employs a combination of marker gene selection, mixing ratio decomposition, and cell type characteristic matrix analysis to identify cell types accurately. STsisal is implemented as an open-acess pipeline.
 
