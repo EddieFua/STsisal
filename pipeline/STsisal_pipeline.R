@@ -83,14 +83,17 @@ GetCorRes = function (selProf, knowRefAll)
   return(list(assignLabel = assignLabel, probMat = summat_org))
 }
 
-STsisal_pipeline = function(Y_raw,K = NULL, knowRef = NULL, possibleCellNumber = 3:15,n_marker = 1000,TotalIter = 5){
+STsisal_pipeline = function(Y_raw,K = NULL, knowRef = NULL, possibleCellNumber = 3:15,n_marker = 1000,TotalIter = 10){
   Y_raw = clean_count(Y_raw)
   if (is.null(K)) {
     Kres = getCellNumber_st(Y_raw, possibleCellNumber)
     K = Kres$bestK
   }
   OutRF <- csDeconv_st(Y_raw, K = K, TotalIter = TotalIter, bound_negative = TRUE,nMarker = n_marker)
-  reduceYmat <- Y_raw[OutRF$InitMarker, ][OutRF$updatedInx, ]
+  reduceYmat <- Y_raw[OutRF$InitMarker, ]
+  for (i in 1:length(OutRF$updatedInx)){
+    reduceYmat <- reduceYmat[OutRF$updatedInx[[i]], ]
+  }
   tsisal_res <- mysisal(reduceYmat, K = K, topN = 50)
   estProp <- tsisal_res$estProp
   selMarker <- tsisal_res$selMarker

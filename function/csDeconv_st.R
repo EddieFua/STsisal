@@ -50,35 +50,20 @@ csDeconv_st = function (Y_raw,
   message("+======= Total iterations = ", TotalIter, " ==========+")
   for (i in seq_len(TotalIter)) {
     message("Current iter = ", i)
-    if(qr(t(allProp[[i]])%*%allProp[[i]])$rank!=K){
-      change_index <- which(apply(t(allProp[[i]]), 2,sum)==min(apply(t(allProp[[i]]),2,sum)))
-      allProp[[i]][change_index,] <- runif(ncol(allProp[[i]])*length(change_index),0.09,0.1)
-      allProp[[i]] <- normalize_col(allProp[[i]])
-    }
     updatedInx_list[[i]] <- DEVarSelect(Y, t(allProp[[i]]), nMarker,bound_negative = TRUE)
-    Y <- Y_raw[InitMarker,][updatedInx_list[[i]],]
+    Y <- Y[updatedInx_list[[i]],]
     Prop0 <- deconfounding(Y, K)
     allProp[[i + 1]] <- Prop0$C$Matrix
-    if(qr(t(allProp[[i + 1]])%*%allProp[[i + 1]])$rank==K){
-      outall = lsfit(t(allProp[[i + 1]]), t(Y), intercept = FALSE)
-      prof = outall$coefficients
-      tmpmat <- t(prof) %*% allProp[[i + 1]]
-      allRMSE[i + 1] <- sqrt(mean((t(Y) - t(tmpmat)) ^ 2))}else{
-      change_index = which(apply(t(allProp[[i + 1]]), 2,rowsum_0)==0)
-      allProp[[i + 1]][change_index,] = runif(ncol(allProp[[i + 1]])*length(change_index),0.09,0.1)
-      allProp[[i + 1]] = normalize_col(allProp[[i + 1]])
-      outall = lsfit(t(allProp[[i + 1]]), t(Y), intercept = FALSE)
-      # prof = out_all$ghat
-      prof = outall$coefficients
-      tmpmat <- t(prof) %*% allProp[[i + 1]]
-      allRMSE[i + 1] <- sqrt(mean((t(Y) - t(tmpmat)) ^ 2))
-      }
-    }
+    outall = mycsfit(t(allProp[[i + 1]]), t(Y))
+    prof <- t(outall$ghat)
+    tmpmat <- prof %*% allProp[[i+1]]
+    allRMSE[i + 1] <- sqrt(mean((t(Y) - t(tmpmat)) ^ 2))
+  }
   min_idx <- which.min(allRMSE)
   Prop0 <- allProp[[min_idx]]
   if(min_idx == 1){
     updatedInx = 1:length(InitMarker)
-  }else{ updatedInx = updatedInx_list[[min_idx-1]]
+  }else{ updatedInx = updatedInx_list[1:(min_idx-1)]
   }
   return(list(
     InitMarker = InitMarker,
